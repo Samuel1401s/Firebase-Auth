@@ -243,9 +243,7 @@
         import { auth } from "./firebase.js";
         import { signOut } from "./afuera.js";
         import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-
         onAuthStateChanged(auth, user => {
-            console.log("Estado de sesion: ", user);
             if (!user) {
                 window.location.href = "../index.html";
             } else {
@@ -259,94 +257,80 @@
     </script>
 
     <header class="p2header">
-        <h1 class="p2header-els"></h1> <div class="dropdown">
-                <button class="dropdown-button">
-                    <i class="fa-solid fa-gear" style="color:#ffffff"></i>
-                    <i class="fa-solid fa-angle-down" style="color:#ffffff; margin-left: 5px;"></i>
-                </button>
-                <div class="dropdown-content">
-                    <a href= "#" id="verify">Verificate</a>
-                    <a href="#" id="logout-link" class="cierre-sesion">Cerrar Sesión</a>
-                </div>
+        <h1 class="p2header-els"></h1>
+        <div class="dropdown">
+            <button class="dropdown-button" type="button">
+                <i class="fa-solid fa-gear" style="color:#ffffff"></i>
+                <i class="fa-solid fa-angle-down" style="color:#ffffff; margin-left: 5px;"></i>
+            </button>
+            <div class="dropdown-content">
+                <a href="#" id="verify">Verificar correo</a>
+                <a href="#" id="logout-link">Cerrar sesión</a>
+            </div>
         </div>
-        
     </header>
 
-    <main class="container">
-        <h2 class="text-center" style=" margin-top: 20px;">Dato curioso de el dia</h2>
-        <div class="apod-controls">
-            <input type="date" id="apod-date-input">
-            <button id="apod-random-button">APOD Aleatorio</button>
+    <div class="modal fade" id="encuestaModal" tabindex="-1" aria-labelledby="encuestaModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="encuestaModalLabel">Verificate</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="encuestaForm">
+                        <div class="mb-3">
+                            <label for="frnombre" class="form-label">Nombre</label>
+                            <input type="text" id="frnombre" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="frapellido" class="form-label">Apellidos</label>
+                            <input type="text" id="frapellido" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="frcorreo" class="form-label">Correo</label>
+                            <input type="email" id="frcorreo" class="form-control" required />
+                        </div>
+                        <div class="mb-3">
+                            <label for="frtelefono" class="form-label">Teléfono</label>
+                            <input type="tel" id="frtelefono" class="form-control" />
+                        </div>
+                        <div class="mb-3">
+                            <label for="frciudad" class="form-label">Ciudad</label>
+                            <input type="text" id="frciudad" class="form-control" />
+                        </div>
+                        <button type="submit" class="btn btn-success">Enviar encuesta</button>
+                    </form>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <div id="apod-container" class="apod-container">
+    <main>
+        
+
+        <section class="apod-container">
+            <h2 id="apod-title"></h2>
+            <div class="apod-media-container" id="apod-media-container"></div>
+            <p id="apod-explanation"></p>
             <div class="loading-spinner" id="loading-spinner"></div>
-            <h3 id="apod-title" class="text-center mb-3"></h3>
-            
-            <div id="apod-media-container" class="apod-media-container"></div>
-            <p id="apod-explanation" class="text-justify"></p>
-        </div>
+            <div class="apod-controls">
+                <input type="date" id="apod-date-input" max="">
+                <button id="apod-random-button">Fecha aleatoria</button>
+            </div>
+        </section>
+        <section class="container my-5" style="max-width: 600px;">
+            <h2>Subir imagen</h2>
+            <input type="file" id="fileInput" accept="image/*" class="form-control mb-2" />
+            <button id="uploadBtn" class="btn btn-primary mb-3">Subir imagen</button>
+            <p id="uploadStatus"></p>
+            <img id="previewImage" style="max-width: 100%; display:none; border-radius: 10px;" />
+        </section>
     </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const dropdownButton = document.querySelector('.dropdown-button');
-            const dropdownContent = document.querySelector('.dropdown-content');
-
-            dropdownButton.addEventListener('click', function () {
-                dropdownContent.classList.toggle('show');
-            });
-
-            window.addEventListener('click', function (event) {
-                if (!event.target.matches('.dropdown-button') && !dropdownContent.contains(event.target)) {
-                    if (dropdownContent.classList.contains('show')) {
-                        dropdownContent.classList.remove('show');
-                    }
-                }
-            });
-        });
-    </script>
-<div class="modal fade" id="verifyEmailModal" tabindex="-1" aria-labelledby="verifyEmailModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content bg-dark text-light">
-      <div class="modal-header">
-        <h5 class="modal-title" id="verifyEmailModalLabel">Verificate</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-      </div>
-      <div class="modal-body">
-  <form id="encuestaForm">
-    <div class="mb-3">
-      <label for="nombre" class="form-label">Nombre</label>
-      <input type="text" class="form-control" id="frnombre" required>
-    </div>
-    <div class="mb-3">
-      <label for="Apellidos" class="form-label">Apellidos</label>
-      <input class="form-control" id="frapellido" required></input>
-    </div>
-    <div class="mb-3">
-      <label for="email" class="form-label">Correo electrónico</label>
-      <input type="email" class="form-control" id="frcorreo" required>
-    </div>
-    <div class="mb-3">
-      <label for="telefono" class="form-label">Telefono</label>
-      <input type="number" class="form-control" id="frtelefono" required>
-    </div>
-    <div class="mb-3">
-      <label for="ciudad" class="form-label">Ciudad</label>
-      <input type="text" class="form-control" id="frciudad" required>
-    </div>
-
-    <button type="submit" class="btn btn-info text-dark">Enviar encuesta</button>
-  </form>
-</div>
-
-    </div>
-  </div>
-</div>
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script type="module" src="pagina2.js"></script>
-
 </body>
+
 </html>
