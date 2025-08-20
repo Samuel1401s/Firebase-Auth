@@ -7,6 +7,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/fi
 import { auth } from "./app/firebase.js";
 import "./app/sesion.js";
 import"./app/pagina2.js";
+import "./app/admin.js";
 onAuthStateChanged(auth, async (user) => {
     logcheck(user)
 });
