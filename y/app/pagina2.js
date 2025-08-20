@@ -1,20 +1,13 @@
 import { auth, db } from "./firebase.js";
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { doc, setDoc, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 import { sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 import { signOut } from "./afuera.js";
 import { showmsg } from "./mensajes.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
-
+const timestamp = Date.now();
 const verifyBtn = document.getElementById("verify");
 const logoutLink = document.getElementById("logout-link");
-const modalElement = document.getElementById('encuestaModal');
 const encuestaForm = document.getElementById("encuestaForm");
-
-let modal;
-if (modalElement) {
-  modal = new bootstrap.Modal(modalElement);
-}
-
 const dropdownButton = document.querySelector('.dropdown-button');
 const dropdownContent = document.querySelector('.dropdown-content');
 dropdownButton.addEventListener('click', () => {
@@ -25,14 +18,6 @@ window.addEventListener('click', (e) => {
     dropdownContent.classList.remove('show');
   }
 });
-
-verifyBtn?.addEventListener("click", () => {
-  if (modal) {
-    modal.show();
-  }
-  dropdownContent.classList.remove('show');
-});
-
 logoutLink?.addEventListener("click", () => {
   signOut();
   dropdownContent.classList.remove('show');
@@ -103,11 +88,12 @@ uploadBtn.addEventListener("click", async () => {
     uploadStatus.textContent = "Debes iniciar sesión.";
     return;
   }
+  const documentoID = `${auth.currentUser.uid}_${timestamp}`;
   const reader = new FileReader();
-  reader.onload = async function(event) {
+  reader.onload = async function (event) {
     const base64Url = event.target.result;
     try {
-      await setDoc(doc(db, "imagenes", auth.currentUser.uid), {
+      await addDoc(collection(db, "imagenes"), {
         url: base64Url,
         uid: auth.currentUser.uid,
         fecha: serverTimestamp()
@@ -147,7 +133,7 @@ async function fetchAPOD(date = null) {
     } else if (data.media_type === "video") {
       apodMediaContainer.innerHTML = `<iframe src="${data.url}" frameborder="0" allowfullscreen></iframe>`;
     } else {
-      apodMediaContainer.textContent = "Tipo de medio no soportado.";
+      apodMediaContainer.textContent = "No soportado.";
     }
     apodExplanation.textContent = data.explanation || "";
   } catch (error) {
