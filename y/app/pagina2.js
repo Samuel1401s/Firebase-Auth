@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
+import { doc, setDoc, serverTimestamp, getDoc } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-firestore.js";
 import { sendEmailVerification } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-auth.js";
 import { signOut } from "./afuera.js";
 import { showmsg } from "./mensajes.js";
@@ -9,6 +9,36 @@ const verifyBtn = document.getElementById("verify");
 const logoutLink = document.getElementById("logout-link");
 const modalElement = document.getElementById('encuestaModal');
 const encuestaForm = document.getElementById("encuestaForm");
+const adminbtn = document.getElementById("adminbtn");
+onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        window.location.href = "../index.html";
+    } else {
+        document.body.style.display = "block";
+        const headerEls = document.querySelector(".p2header-els");
+        if (headerEls) {
+            headerEls.textContent = `Hola, ${user.displayName || user.email.split('@')[0]}!`;
+        }
+        try {
+            const userRef = doc(db, "users", user.uid);
+            const userSnap = await getDoc(userRef);
+            if (userSnap.exists() && userSnap.data().rol === "admin") {
+                if (adminbtn) {
+                    adminbtn.style.display = "inline-block"; 
+                }
+            } else {
+                if (adminbtn) {
+                    adminbtn.style.display = "none"; 
+                }
+            }
+        } catch (error) {
+            console.error("Error al verificar el rol del usuario:", error);
+            if (adminbtn) {
+                adminbtn.style.display = "none";
+            }
+        }
+    }
+});
 
 let modal;
 if (modalElement) {
@@ -64,9 +94,9 @@ encuestaForm?.addEventListener("submit", async (e) => {
       telefono: document.getElementById("frtelefono").value.trim(),
       ciudad: document.getElementById("frciudad").value.trim(),
       uid: auth.currentUser.uid,
-      fecha: serverTimestamp()
+      timestamp: serverTimestamp()
     };
-    await setDoc(doc(db, "usuarios", data.uid), data);
+    await setDoc(doc(db, "users", data.uid), data);
     await sendEmailVerification(auth.currentUser);
     showmsg("Encuesta enviada y correo de verificación enviado", "bien");
     encuestaForm.reset();
@@ -88,39 +118,52 @@ onAuthStateChanged(auth, (user) => {
   }
 });
 
-const fileInput = document.getElementById("fileInput");
-const uploadBtn = document.getElementById("uploadBtn");
-const uploadStatus = document.getElementById("uploadStatus");
 
+  const ticketForm = document.getElementById("ticketForm");
+const ticketStatus = document.getElementById("ticketStatus");
 
-uploadBtn.addEventListener("click", async () => {
-  const file = fileInput?.files[0];
-  if (!file) {
-    uploadStatus.textContent = "Por favor selecciona una imagen.";
-    return;
-  }
+ticketForm?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
   if (!auth.currentUser) {
-    uploadStatus.textContent = "Debes iniciar sesión.";
+    ticketStatus.textContent = "Debes iniciar sesión para enviar un ticket.";
     return;
   }
-  const reader = new FileReader();
-  reader.onload = async function(event) {
-    const base64Url = event.target.result;
-    try {
-      await setDoc(doc(db, "imagenes", auth.currentUser.uid), {
-        url: base64Url,
-        uid: auth.currentUser.uid,
-        fecha: serverTimestamp()
-      });
-      uploadStatus.textContent = "Imagen guardada correctamente.";
-      fileInput.value = "";
-    } catch (error) {
-      uploadStatus.textContent = "Error al guardar la imagen: " + error.message;
-    }
-  };
-  reader.readAsDataURL(file);
-});
 
+  const nombre = document.getElementById("ticketNombre").value.trim();
+  const asunto = document.getElementById("ticketAsunto").value.trim();
+  const descripcion = document.getElementById("ticketDescripcion").value.trim();
+
+  const file = document.getElementById("ticketImage").files[0];
+  let base64Image = null;
+
+  if (file) {
+    base64Image = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = err => reject(err);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  const ticketData = {
+    uid: auth.currentUser.uid,
+    nombre,
+    asunto,
+    descripcion,
+    imagen: base64Image,
+    fecha: serverTimestamp()
+  };
+
+  try {
+    const ticketId = auth.currentUser.uid + "_" + Date.now(); 
+    await setDoc(doc(db, "tickets", ticketId), ticketData);
+    ticketStatus.textContent = showmsg("Ticket enviado con éxito", "bien");
+    ticketForm.reset();
+  } catch (error) {
+    ticketStatus.textContent = "Error al enviar ticket: " + error.message;
+  }
+});
 const apiKey = "cA5Kf8Pubz688MygClQPZMgQ1oN1brMshu4rJxbF";
 const apodTitle = document.getElementById("apod-title");
 const apodMediaContainer = document.getElementById("apod-media-container");
