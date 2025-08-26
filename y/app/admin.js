@@ -11,18 +11,31 @@ const logoutLink = document.getElementById('logout-link');
 
 function displayTicket(ticket) {
     ticketsContainer.innerHTML = `
- <div class="card shadow-sm" style="background-color: #393E46; color: #EEEEEE;">
- <div class="card-header" style="background-color: #00ADB5; color: #222831;">
- <h5 class="mb-0">Ticket # ${ticket.id}</h5>
- </div>
- <div class="card-body">
- <h5 class="card-title">${ticket.data.asunto}</h5>
- <p class="card-text"><strong>Usuario:</strong> ${ticket.data.nombre}</p>
- <p class="card-text"><strong>Descripción:</strong> ${ticket.data.descripcion}</p>
- ${ticket.data.imagen ? `<img src="${ticket.data.imagen}" alt="Imagen del ticket" class="img-fluid mt-3 rounded-3" />` : ''}
- </div>
- </div>
- `;
+<div class="card shadow-sm" style="background-color: #393E46; color: #EEEEEE;">
+<div class="card-header" style="background-color: #00ADB5; color: #222831;">
+<h5 class="mb-0">Ticket # ${ticket.id}</h5>
+</div>
+<div class="card-body">
+<h5 class="card-title">${ticket.data.asunto}</h5>
+<p class="card-text"><strong>Usuario:</strong> ${ticket.data.nombre}</p>
+<p class="card-text"><strong>Descripción:</strong> ${ticket.data.descripcion}</p>
+${ticket.data.imagen ? `<img src="${ticket.data.imagen}" alt="Imagen del ticket" class="img-fluid mt-3 rounded-3" />` : ''}
+</div>
+</div>
+`;
+}
+
+function setupDownloadButton(button) {
+    button.addEventListener('click', (e) => {
+        e.preventDefault();
+        const base64Data = button.getAttribute('data-base64');
+        const link = document.createElement('a');
+        link.href = base64Data;
+        link.download = `ticket_image_${new Date().toISOString().slice(0, 10)}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
 }
 
 async function loadTickets() {
@@ -49,21 +62,29 @@ async function loadTickets() {
 
             ticketCard.innerHTML = `
 <div class="card-header d-flex justify-content-between align-items-center" style="background-color: #00ADB5; color: #222831;">
- <h6 class="mb-0"><strong>Usuario:</strong> ${ticketData.nombre} | <strong>Fecha:</strong> ${formattedDate}</h6>
- <button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTicket-${ticketId}" aria-expanded="false" aria-controls="collapseTicket-${ticketId}">
- Ver
- </button>
- </div>
- <div class="collapse" id="collapseTicket-${ticketId}">
- <div class="card-body" style="background-color: #393E46;">
- <p class="card-text"><strong>Asunto:</strong> ${ticketData.asunto}</p>
- <p class="card-text"><strong>Descripción:</strong> ${ticketData.descripcion}</p>
- ${ticketData.imagen ? `<img src="${ticketData.imagen}" alt="Imagen del ticket" class="img-fluid mt-3 rounded-3" />` : ''}
+<h6 class="mb-0"><strong>Usuario:</strong> ${ticketData.nombre} | <strong>Fecha:</strong> ${formattedDate}</h6>
+<button class="btn btn-primary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTicket-${ticketId}" aria-expanded="false" aria-controls="collapseTicket-${ticketId}">
+Ver
+</button>
+</div>
+<div class="collapse" id="collapseTicket-${ticketId}">
+<div class="card-body" style="background-color: #393E46;">
+<p class="card-text"><strong>Asunto:</strong> ${ticketData.asunto}</p>
+<p class="card-text"><strong>Descripción:</strong> ${ticketData.descripcion}</p>
+${ticketData.imagen ? `
+    <img src="${ticketData.imagen}" alt="Imagen del ticket" class="img-fluid mt-3 rounded-3 ticket-preview-img" />
+    <button class="btn btn-success mt-2 download-btn" data-base64="${ticketData.imagen}">Descargar Imagen</button>
+` : ''}
 </div>
 </div>
- `;
+`;
 
             ticketsList.appendChild(ticketCard);
+        });
+
+        const downloadButtons = ticketsList.querySelectorAll('.download-btn');
+        downloadButtons.forEach(button => {
+            setupDownloadButton(button);
         });
 
     } catch (error) {
